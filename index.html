@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspirata: استودیوی خلاقیت و ذهن‌نگاری هوشمند</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and ReactDOM from CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel for JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        /* Grid background dynamic animation */
+        .bg-grid {
+            background-image: radial-gradient(#1e293b 1.2px, transparent 1.2px);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen overflow-hidden">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // Preset templates
+        const WORKSPACE_PRESETS = {
+            startup: {
+                name: '🚀 راه‌اندازی استارتاپ جدید',
+                nodes: [
+                    { id: 'root', label: 'ایده استارتاپ من', x: 400, y: 300, color: 'amber', icon: 'lightbulb', isSelected: true, isCentral: true },
+                    { id: 'node_1', label: 'تحقیقات بازار', x: 200, y: 150, color: 'cyan', icon: 'compass', isSelected: false },
+                    { id: 'node_2', label: 'توسعه محصول اولیه (MVP)', x: 600, y: 150, color: 'indigo', icon: 'briefcase', isSelected: false },
+                    { id: 'node_3', label: 'برنامه‌ریزی مالی', x: 200, y: 450, color: 'emerald', icon: 'target', isSelected: false },
+                    { id: 'node_4', label: 'کمپین بازاریابی دیجیتال', x: 600, y: 450, color: 'rose', icon: 'award', isSelected: false },
+                ],
+                links: [
+                    { id: 'l1', source: 'root', target: 'node_1' },
+                    { id: 'l2', source: 'root', target: 'node_2' },
+                    { id: 'l3', source: 'root', target: 'node_3' },
+                    { id: 'l4', source: 'root', target: 'node_4' },
+                ]
+            },
+            creative: {
+                name: '📝 نوشتن رمان علمی‌تخیلی',
+                nodes: [
+                    { id: 'root', label: 'رمان: افق کوانتومی', x: 400, y: 300, color: 'indigo', icon: 'bookmark', isSelected: true, isCentral: true },
+                    { id: 'node_1', label: 'شخصیت اصلی داستان', x: 220, y: 200, color: 'rose', icon: 'lightbulb', isSelected: false },
+                    { id: 'node_2', label: 'فناوری سفر در زمان', x: 580, y: 180, color: 'amber', icon: 'briefcase', isSelected: false },
+                    { id: 'node_3', label: 'فصل ۱: سقوط سیاهچاله', x: 400, y: 100, color: 'emerald', icon: 'filetext', isSelected: false },
+                    { id: 'node_4', label: 'گره‌گشایی نهایی رمان', x: 400, y: 500, color: 'cyan', icon: 'compass', isSelected: false },
+                ],
+                links: [
+                    { id: 'l1', source: 'root', target: 'node_1' },
+                    { id: 'l2', source: 'root', target: 'node_2' },
+                    { id: 'l3', source: 'root', target: 'node_3' },
+                    { id: 'l4', source: 'root', target: 'node_4' },
+                ]
+            }
+        };
+
+        const COLOR_MAP = {
+            rose: {
+                border: 'border-rose-500/80',
+                bg: 'bg-rose-950/40',
+                text: 'text-rose-400',
+                glow: 'shadow-[0_0_20px_rgba(244,63,94,0.3)]',
+                fill: '#f43f5e'
+            },
+            indigo: {
+                border: 'border-indigo-500/80',
+                bg: 'bg-indigo-950/40',
+                text: 'text-indigo-400',
+                glow: 'shadow-[0_0_20px_rgba(99,102,241,0.3)]',
+                fill: '#6366f1'
+            },
+            amber: {
+                border: 'border-amber-500/80',
+                bg: 'bg-amber-950/40',
+                text: 'text-amber-400',
+                glow: 'shadow-[0_0_20px_rgba(245,158,11,0.3)]',
+                fill: '#f59e0b'
+            },
+            emerald: {
+                border: 'border-emerald-500/80',
+                bg: 'bg-emerald-950/40',
+                text: 'text-emerald-400',
+                glow: 'shadow-[0_0_20px_rgba(16,185,129,0.3)]',
+                fill: '#10b981'
+            },
+            cyan: {
+                border: 'border-cyan-500/80',
+                bg: 'bg-cyan-950/40',
+                text: 'text-cyan-400',
+                glow: 'shadow-[0_0_20px_rgba(6,182,212,0.3)]',
+                fill: '#06b6d4'
+            }
+        };
+
+        function App() {
+            const [nodes, setNodes] = useState([]);
+            const [links, setLinks] = useState([]);
+            const [goals, setGoals] = useState([]);
+            const [chatHistory, setChatHistory] = useState([]);
+            const [activeTab, setActiveTab] = useState('brainstorm');
+            
+            const [editingNodeId, setEditingNodeId] = useState(null);
+            const [editingLabel, setEditingLabel] = useState('');
+            const [chatInput, setChatInput] = useState('');
+            const [isAiLoading, setIsAiLoading] = useState(false);
+            const [geminiKey, setGeminiKey] = useState('');
+            const [showKeyModal, setShowKeyModal] = useState(false);
+            
+            const [pan, setPan] = useState({ x: 0, y: 0 });
+            const [zoom, setZoom] = useState(1);
+            const [isPanning, setIsPanning] = useState(false);
+            const [draggedNodeId, setDraggedNodeId] = useState(null);
+            const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+            const [connectingNodeId, setConnectingNodeId] = useState(null);
+            
+            const canvasRef = useRef(null);
+            const panStart = useRef({ x: 0, y: 0 });
+
+            // Initialize App
+            useEffect(() => {
+                const savedNodes = localStorage.getItem('ins_g_nodes');
+                const savedLinks = localStorage.getItem('ins_g_links');
+                const savedKey = localStorage.getItem('ins_gemini_key');
+                
+                if (savedKey) setGeminiKey(savedKey);
+                
+                if (savedNodes && savedLinks) {
+                    setNodes(JSON.parse(savedNodes));
+                    setLinks(JSON.parse(savedLinks));
+                } else {
+                    // Load default template
+                    setNodes(WORKSPACE_PRESETS.startup.nodes);
+                    setLinks(WORKSPACE_PRESETS.startup.links);
+                }
+                
+                setChatHistory([
+                    { id: 'w1', sender: 'assistant', text: 'سلام! به استودیوی طوفان فکری **Inspirata** خوش آمدید. هر جای صفحه دو بار کلیک کنید تا ایده جدیدی ثبت شود، سپس بنویسید تا ذهن خود را گسترش دهید.' }
+                ]);
+            }, []);
+
+            // Auto Save
+            useEffect(() => {
+                if (nodes.length > 0) {
+                    localStorage.setItem('ins_g_nodes', JSON.stringify(nodes));
+                    localStorage.setItem('ins_g_links', JSON.stringify(links));
+                }
+            }, [nodes, links]);
+
+            const selectedNode = useMemo(() => nodes.find(n => n.isSelected), [nodes]);
+
+            // Handlers
+            const handleCanvasDoubleClick = (e) => {
+                if (e.target !== canvasRef.current && e.target.tagName !== 'svg') return;
+                const rect = canvasRef.current.getBoundingClientRect();
+                const clientX = e.clientX - rect.left - pan.x;
+                const clientY = e.clientY - rect.top - pan.y;
+                const x = Math.round(clientX / zoom);
+                const y = Math.round(clientY / zoom);
+
+                const newId = `node_${Date.now()}`;
+                const colors = ['rose', 'indigo', 'amber', 'emerald', 'cyan'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                const newNode = {
+                    id: newId,
+                    label: 'ایده جدید',
+                    x, y,
+                    color: randomColor,
+                    icon: 'lightbulb',
+                    isSelected: true
+                };
+
+                setNodes(prev => {
+                    const deselected = prev.map(n => ({ ...n, isSelected: false }));
+                    return [...deselected, newNode];
+                });
+
+                if (selectedNode) {
+                    setLinks(prev => [...prev, { id: `link_${Date.now()}`, source: selectedNode.id, target: newId }]);
+                }
+            };
+
+            const selectNode = (id, e) => {
+                e.stopPropagation();
+                if (connectingNodeId) {
+                    if (connectingNodeId !== id) {
+                        setLinks(prev => [...prev, { id: `link_${Date.now()}`, source: connectingNodeId, target: id }]);
+                    }
+                    setConnectingNodeId(null);
+                    return;
+                }
+                setNodes(prev => prev.map(n => ({ ...n, isSelected: n.id === id })));
+            };
+
+            const handleNodeMouseDown = (id, e) => {
+                e.stopPropagation();
+                selectNode(id, e);
+                const node = nodes.find(n => n.id === id);
+                if (!node) return;
+                
+                const rect = canvasRef.current.getBoundingClientRect();
+                const clientX = e.clientX - rect.left - pan.x;
+                const clientY = e.clientY - rect.top - pan.y;
+                
+                setDraggedNodeId(id);
+                setDragOffset({
+                    x: (clientX / zoom) - node.x,
+                    y: (clientY / zoom) - node.y
+                });
+            };
+
+            const handleCanvasMouseMove = (e) => {
+                if (isPanning) {
+                    setPan({
+                        x: e.clientX - panStart.current.x,
+                        y: e.clientY - panStart.current.y
+                    });
+                } else if (draggedNodeId) {
+                    const rect = canvasRef.current.getBoundingClientRect();
+                    const clientX = e.clientX - rect.left - pan.x;
+                    const clientY = e.clientY - rect.top - pan.y;
+                    
+                    setNodes(prev => prev.map(node => {
+                        if (node.id === draggedNodeId) {
+                            return {
+                                ...node,
+                                x: Math.round(clientX / zoom - dragOffset.x),
+                                y: Math.round(clientY / zoom - dragOffset.y)
+                            };
+                        }
+                        return node;
+                    }));
+                }
+            };
+
+            const handleCanvasMouseDown = (e) => {
+                if (draggedNodeId) return;
+                setIsPanning(true);
+                panStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+            };
+
+            const saveKey = (key) => {
+                setGeminiKey(key);
+                localStorage.setItem('ins_gemini_key', key);
+                setShowKeyModal(false);
+            };
+
+            // Call official Google Gemini API (Directly from client)
+            const sendChatMessage = async () => {
+                if (!chatInput.trim() || isAiLoading) return;
+                
+                const prompt = chatInput;
+                const userMsg = { id: `u_${Date.now()}`, sender: 'user', text: prompt };
+                setChatHistory(prev => [...prev, userMsg]);
+                setChatInput('');
+                setIsAiLoading(true);
+
+                if (!geminiKey) {
+                    setChatHistory(prev => [...prev, {
+                        id: `sys_${Date.now()}`,
+                        sender: 'system',
+                        text: '⚠️ **خطای هوش مصنوعی**: لطفاً ابتدا کلید API خود را با کلیک بر روی دکمه چرخ‌دنده در بالای صفحه وارد کنید.'
+                    }]);
+                    setIsAiLoading(false);
+                    return;
+                }
+
+                try {
+                    // Structure the prompt with canvas context
+                    const contextText = nodes.map(n => `ایده: "${n.label}" ${n.isSelected ? '[فعال]' : ''}`).join('، ');
+                    const finalPrompt = `بوم من شامل ایده های زیر است: ${contextText}.\nکاربر پرسید: ${prompt}.\nبه عنوان دستیار طوفان فکری خلاق به فارسی پاسخ بده. پاسخ باید حداکثر در قالب ساختار JSON با فرمت زیر باشد:\n{\n  "reply": "پاسخ متنی الهام بخش و طراح محور شما به فارسی همراه با ایده های تکمیلی",\n  "suggestedNodes": ["ایده ۱", "ایده ۲", "ایده ۳"]\n}`;
+
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: finalPrompt }] }],
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    });
+
+                    if (!res.ok) throw new Error('API Key نادرست است یا خطای شبکه رخ داده است.');
+
+                    const data = await res.json();
+                    const jsonResponse = JSON.parse(data.candidates[0].content.parts[0].text);
+
+                    setChatHistory(prev => [...prev, {
+                        id: `bot_${Date.now()}`,
+                        sender: 'assistant',
+                        text: jsonResponse.reply,
+                        suggestedNodes: jsonResponse.suggestedNodes
+                    }]);
+                } catch (error) {
+                    setChatHistory(prev => [...prev, {
+                        id: `err_${Date.now()}`,
+                        sender: 'system',
+                        text: `❌ خطا در ارتباط با سرور هوش مصنوعی: ${error.message}`
+                    }]);
+                } finally {
+                    setIsAiLoading(false);
+                }
+            };
+
+            const addSuggestedNode = (label) => {
+                if (!selectedNode) return;
+                const angle = Math.random() * 2 * Math.PI;
+                const r = 160;
+                const x = Math.round(selectedNode.x + Math.cos(angle) * r);
+                const y = Math.round(selectedNode.y + Math.sin(angle) * r);
+                const newId = `node_${Date.now()}`;
+                
+                setNodes(prev => [...prev, {
+                    id: newId,
+                    label,
+                    x, y,
+                    color: selectedNode.color,
+                    icon: 'lightbulb',
+                    isSelected: false
+                }]);
+                setLinks(prev => [...prev, { id: `link_${Date.now()}`, source: selectedNode.id, target: newId }]);
+            };
+
+            return (
+                <div className="flex flex-col h-screen select-none">
+                    {/* Header */}
+                    <header class="flex items-center justify-between px-6 py-4 bg-slate-900 border-b border-slate-800 shrink-0 z-10">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="p-2.5 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                                <i data-lucide="sparkles" class="w-6 h-6 text-amber-400"></i>
+                            </div>
+                            <div>
+                                <h1 class="text-xl font-bold bg-gradient-to-l from-slate-100 to-amber-400 bg-clip-text text-transparent">Inspirata</h1>
+                                <p class="text-[10px] text-slate-400">استودیوی خلاقیت و بوم ایده‌پردازی هوشمند</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <button onClick={() => setShowKeyModal(true)} class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-300">
+                                <i data-lucide="settings" class="w-4 h-4"></i>
+                            </button>
+                            <button onClick={() => {
+                                setNodes(WORKSPACE_PRESETS.startup.nodes);
+                                setLinks(WORKSPACE_PRESETS.startup.links);
+                            }} class="px-3 py-1.5 bg-slate-800 text-slate-300 hover:text-white rounded-lg text-xs border border-slate-700">
+                                بارگذاری قالب اول
+                            </button>
+                        </div>
+                    </header>
+
+                    {/* Desktop Workspace Grid */}
+                    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+                        {/* Canvas */}
+                        <main 
+                            ref={canvasRef}
+                            onMouseDown={handleCanvasMouseDown}
+                            onMouseMove={handleCanvasMouseMove}
+                            onMouseUp={() => { setIsPanning(false); setDraggedNodeId(null); }}
+                            onDoubleClick={handleCanvasDoubleClick}
+                            className="flex-1 relative overflow-hidden bg-slate-950 bg-grid cursor-grab active:cursor-grabbing"
+                        >
+                            {/* Canvas Directives */}
+                            <div className="absolute top-4 right-4 z-10 bg-slate-900/95 border border-slate-800 rounded-xl p-3 shadow-xl max-w-xs text-xs text-slate-400 space-y-1">
+                                <div className="text-slate-200 font-bold flex items-center space-x-1 space-x-reverse">
+                                    <i data-lucide="compass" class="w-4 h-4 text-amber-400"></i>
+                                    <span>دستورالعمل‌ها</span>
+                                </div>
+                                <p>💡 **دوبار کلیک** برای ثبت حباب ایده‌ جدید.</p>
+                                <p>👇 **کشیدن ایده** برای سازماندهی بوم.</p>
+                                <p>🔗 کلیک روی هر حباب برای انتخاب آن.</p>
+                            </div>
+
+                            {/* SVG Connecting lines */}
+                            <svg className="absolute inset-0 pointer-events-none w-full h-full" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}>
+                                {links.map(link => {
+                                    const from = nodes.find(n => n.id === link.source);
+                                    const to = nodes.find(n => n.id === link.target);
+                                    if (!from || !to) return null;
+                                    return (
+                                        <g key={link.id}>
+                                            <path 
+                                                d={`M ${from.x} ${from.y} C ${(from.x + to.x)/2} ${from.y}, ${(from.x + to.x)/2} ${to.y}, ${to.x} ${to.y}`} 
+                                                fill="none" 
+                                                stroke={from.isSelected || to.isSelected ? COLOR_MAP[from.color]?.fill : '#334155'} 
+                                                strokeWidth={from.isSelected || to.isSelected ? "3" : "1.5"}
+                                            />
+                                        </g>
+                                    );
+                                })}
+                            </svg>
+
+                            {/* HTML Nodes container */}
+                            <div className="absolute inset-0 pointer-events-none" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}>
+                                {nodes.map(node => {
+                                    const config = COLOR_MAP[node.color] || COLOR_MAP.indigo;
+                                    return (
+                                        <div
+                                            key={node.id}
+                                            onMouseDown={(e) => handleNodeMouseDown(node.id, e)}
+                                            style={{ left: `${node.x}px`, top: `${node.y}px`, transform: 'translate(-50%, -50%)' }}
+                                            className={`absolute pointer-events-auto flex items-center space-x-2 space-x-reverse px-4 py-2.5 rounded-2xl border-2 backdrop-blur-md cursor-grab transition-all duration-150
+                                                ${config.bg} ${config.border}
+                                                ${node.isSelected ? `${config.glow} scale-105 border-white z-30` : 'hover:scale-102 z-20'}
+                                            `}
+                                        >
+                                            <div className="w-2 h-2 rounded-full bg-slate-200"></div>
+                                            {editingNodeId === node.id ? (
+                                                <input
+                                                    type="text"
+                                                    value={editingLabel}
+                                                    onChange={e => setEditingLabel(e.target.value)}
+                                                    onBlur={() => {
+                                                        setNodes(prev => prev.map(n => n.id === node.id ? { ...n, label: editingLabel } : n));
+                                                        setEditingNodeId(null);
+                                                    }}
+                                                    onKeyDown={e => e.key === 'Enter' && e.target.blur()}
+                                                    className="bg-slate-900 border border-slate-700 text-xs px-1 rounded text-white"
+                                                    autoFocus
+                                                />
+                                            ) : (
+                                                <span onDoubleClick={() => { setEditingNodeId(node.id); setEditingLabel(node.label); }} className="text-xs font-semibold">{node.label}</span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Node action inspector footer inside canvas */}
+                            {selectedNode && (
+                                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-3 space-x-reverse bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl shadow-2xl">
+                                    <span class="text-xs text-amber-400 font-bold">{selectedNode.label}</span>
+                                    <button onClick={() => {
+                                        setEditingNodeId(selectedNode.id);
+                                        setEditingLabel(selectedNode.label);
+                                    }} class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded">تغییر نام</button>
+                                    <button onClick={() => {
+                                        setNodes(prev => prev.filter(n => n.id !== selectedNode.id));
+                                        setLinks(prev => prev.filter(l => l.source !== selectedNode.id && l.target !== selectedNode.id));
+                                    }} class="text-[10px] bg-rose-950 text-rose-400 px-2 py-1 rounded border border-rose-800">حذف ایده</button>
+                                </div>
+                            )}
+                        </main>
+
+                        {/* Sidebar Chat & Control Room */}
+                        <aside class="w-full lg:w-96 bg-slate-900 border-t lg:border-t-0 lg:border-r border-slate-800 flex flex-col shrink-0">
+                            <div class="p-4 border-b border-slate-800">
+                                <h3 class="text-sm font-bold text-slate-300 flex items-center space-x-2 space-x-reverse">
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                                    <span>همیار هوش مصنوعی استودیو</span>
+                                </h3>
+                            </div>
+
+                            {/* Chat history list */}
+                            <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+                                {chatHistory.map(msg => (
+                                    <div key={msg.id} class={`flex flex-col ${msg.sender === 'user' ? 'items-start' : 'items-end'}`}>
+                                        <div class={`p-3 rounded-xl max-w-[85%] ${msg.sender === 'user' ? 'bg-indigo-600 text-white' : 'bg-slate-950 text-slate-200'}`}>
+                                            <p>{msg.text}</p>
+                                        </div>
+                                        {msg.suggestedNodes && msg.suggestedNodes.length > 0 && (
+                                            <div class="flex flex-wrap gap-1.5 mt-2 justify-end">
+                                                {msg.suggestedNodes.map((s, idx) => (
+                                                    <button key={idx} onClick={() => addSuggestedNode(s)} class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px]">
+                                                        + افزودن "{s}" به بوم
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                                {isAiLoading && <div class="text-slate-500 animate-pulse">در حال ایده‌پردازی با هوش مصنوعی...</div>}
+                            </div>
+
+                            {/* Bottom input area */}
+                            <div class="p-4 bg-slate-950 border-t border-slate-800 flex space-x-2 space-x-reverse">
+                                <input 
+                                    type="text" 
+                                    value={chatInput}
+                                    onChange={e => setChatInput(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && sendChatMessage()}
+                                    placeholder="برای توسعه حباب‌های خود سوالی بپرسید..." 
+                                    class="flex-1 bg-slate-900 border border-slate-800 text-xs px-3 py-2 rounded-lg text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                />
+                                <button onClick={sendChatMessage} class="p-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </aside>
+                    </div>
+
+                    {/* Gemini Key Config Modal */}
+                    {showKeyModal && (
+                        <div class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 text-right">
+                                <h3 class="font-bold text-slate-100 mb-2 text-sm">تنظیمات هوش مصنوعی Gemini</h3>
+                                <p class="text-[11px] text-slate-400 mb-4 leading-relaxed">برای استفاده از چت هوش مصنوعی، لطفاً کلید API دریافتی خود از گوگل را وارد نمایید. این کلید مستقیماً در مرورگر شما ذخیره شده و هیچ کجای دیگری ارسال نخواهد شد.</p>
+                                <input 
+                                    id="key_input_field"
+                                    type="password" 
+                                    placeholder="AIzaSy..." 
+                                    defaultValue={geminiKey}
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 font-mono mb-4 focus:outline-none"
+                                />
+                                <div class="flex justify-start space-x-2 space-x-reverse text-xs">
+                                    <button onClick={() => saveKey(document.getElementById('key_input_field').value)} class="px-4 py-2 bg-amber-500 text-slate-950 rounded-lg font-bold">ذخیره</button>
+                                    <button onClick={() => setShowKeyModal(false)} class="px-3 py-2 bg-slate-800 text-slate-300 rounded-lg">انصراف</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+        // Init Lucide icons
+        setTimeout(() => {
+            lucide.createIcons();
+        }, 800);
+    </script>
+</body>
+</html>
