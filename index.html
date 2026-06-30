@@ -3,555 +3,647 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inspirata: استودیوی خلاقیت و ذهن‌نگاری هوشمند</title>
-    <!-- Tailwind CSS v3 -->
+    <title>امید و تندرستی | برای فاطمه عزیز</title>
+    <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React and ReactDOM from CDN -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <!-- Babel for JSX compilation -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide Icons -->
+    <!-- Fonts (Vazirmatn from Google Fonts) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons via CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
     <style>
-        body {
+        * {
             font-family: 'Vazirmatn', sans-serif;
+            scroll-behavior: smooth;
+        }
+        body {
+            background-color: #020617;
+            color: #cbd5e1;
+            overflow-x: hidden;
         }
         .font-mono {
             font-family: 'JetBrains Mono', monospace;
         }
         /* Custom scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #0f172a;
+            background: #020617;
         }
         ::-webkit-scrollbar-thumb {
-            background: #334155;
+            background: #1e293b;
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+            background: #334155;
         }
-        /* Grid background dynamic animation */
-        .bg-grid {
-            background-image: radial-gradient(#1e293b 1.2px, transparent 1.2px);
-            background-size: 24px 24px;
+        /* Stars twinkle animation */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 0.8; transform: scale(1.2); }
+        }
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+        /* Flame flicker */
+        @keyframes flicker {
+            0%, 100% { transform: scale(1) rotate(-1deg); }
+            20% { transform: scale(1.1) rotate(1deg); }
+            40% { transform: scale(0.95) rotate(-0.5deg); }
+            60% { transform: scale(1.05) rotate(1.5deg); }
+            80% { transform: scale(1) rotate(-0.5deg); }
+        }
+        .flame-active {
+            animation: flicker 1.2s infinite ease-in-out;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen overflow-hidden">
+<body class="relative min-h-screen pb-16 selection:bg-blue-500/30 selection:text-blue-300">
 
-    <div id="root"></div>
+    <!-- Starry background -->
+    <div id="stars-container" class="absolute inset-0 pointer-events-none overflow-hidden z-0"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef, useMemo } = React;
+    <!-- Background glowing auras -->
+    <div class="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-        // Preset templates
-        const WORKSPACE_PRESETS = {
-            startup: {
-                name: '🚀 راه‌اندازی استارتاپ جدید',
-                nodes: [
-                    { id: 'root', label: 'ایده استارتاپ من', x: 400, y: 300, color: 'amber', icon: 'lightbulb', isSelected: true, isCentral: true },
-                    { id: 'node_1', label: 'تحقیقات بازار', x: 200, y: 150, color: 'cyan', icon: 'compass', isSelected: false },
-                    { id: 'node_2', label: 'توسعه محصول اولیه (MVP)', x: 600, y: 150, color: 'indigo', icon: 'briefcase', isSelected: false },
-                    { id: 'node_3', label: 'برنامه‌ریزی مالی', x: 200, y: 450, color: 'emerald', icon: 'target', isSelected: false },
-                    { id: 'node_4', label: 'کمپین بازاریابی دیجیتال', x: 600, y: 450, color: 'rose', icon: 'award', isSelected: false },
-                ],
-                links: [
-                    { id: 'l1', source: 'root', target: 'node_1' },
-                    { id: 'l2', source: 'root', target: 'node_2' },
-                    { id: 'l3', source: 'root', target: 'node_3' },
-                    { id: 'l4', source: 'root', target: 'node_4' },
-                ]
-            },
-            creative: {
-                name: '📝 نوشتن رمان علمی‌تخیلی',
-                nodes: [
-                    { id: 'root', label: 'رمان: افق کوانتومی', x: 400, y: 300, color: 'indigo', icon: 'bookmark', isSelected: true, isCentral: true },
-                    { id: 'node_1', label: 'شخصیت اصلی داستان', x: 220, y: 200, color: 'rose', icon: 'lightbulb', isSelected: false },
-                    { id: 'node_2', label: 'فناوری سفر در زمان', x: 580, y: 180, color: 'amber', icon: 'briefcase', isSelected: false },
-                    { id: 'node_3', label: 'فصل ۱: سقوط سیاهچاله', x: 400, y: 100, color: 'emerald', icon: 'filetext', isSelected: false },
-                    { id: 'node_4', label: 'گره‌گشایی نهایی رمان', x: 400, y: 500, color: 'cyan', icon: 'compass', isSelected: false },
-                ],
-                links: [
-                    { id: 'l1', source: 'root', target: 'node_1' },
-                    { id: 'l2', source: 'root', target: 'node_2' },
-                    { id: 'l3', source: 'root', target: 'node_3' },
-                    { id: 'l4', source: 'root', target: 'node_4' },
-                ]
-            }
-        };
-
-        const COLOR_MAP = {
-            rose: {
-                border: 'border-rose-500/80',
-                bg: 'bg-rose-950/40',
-                text: 'text-rose-400',
-                glow: 'shadow-[0_0_20px_rgba(244,63,94,0.3)]',
-                fill: '#f43f5e'
-            },
-            indigo: {
-                border: 'border-indigo-500/80',
-                bg: 'bg-indigo-950/40',
-                text: 'text-indigo-400',
-                glow: 'shadow-[0_0_20px_rgba(99,102,241,0.3)]',
-                fill: '#6366f1'
-            },
-            amber: {
-                border: 'border-amber-500/80',
-                bg: 'bg-amber-950/40',
-                text: 'text-amber-400',
-                glow: 'shadow-[0_0_20px_rgba(245,158,11,0.3)]',
-                fill: '#f59e0b'
-            },
-            emerald: {
-                border: 'border-emerald-500/80',
-                bg: 'bg-emerald-950/40',
-                text: 'text-emerald-400',
-                glow: 'shadow-[0_0_20px_rgba(16,185,129,0.3)]',
-                fill: '#10b981'
-            },
-            cyan: {
-                border: 'border-cyan-500/80',
-                bg: 'bg-cyan-950/40',
-                text: 'text-cyan-400',
-                glow: 'shadow-[0_0_20px_rgba(6,182,212,0.3)]',
-                fill: '#06b6d4'
-            }
-        };
-
-        function App() {
-            const [nodes, setNodes] = useState([]);
-            const [links, setLinks] = useState([]);
-            const [goals, setGoals] = useState([]);
-            const [chatHistory, setChatHistory] = useState([]);
-            const [activeTab, setActiveTab] = useState('brainstorm');
+    <!-- Header / Navbar -->
+    <header class="relative z-10 border-b border-slate-900 bg-slate-950/60 backdrop-blur-md sticky top-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-blue-400 font-bold text-sm sm:text-base">
+                <i data-lucide="sparkles" class="w-5 h-5 animate-pulse"></i>
+                <span>پناهِ امید برای فاطمه عزیز</span>
+            </div>
             
-            const [editingNodeId, setEditingNodeId] = useState(null);
-            const [editingLabel, setEditingLabel] = useState('');
-            const [chatInput, setChatInput] = useState('');
-            const [isAiLoading, setIsAiLoading] = useState(false);
-            const [geminiKey, setGeminiKey] = useState('');
-            const [showKeyModal, setShowKeyModal] = useState(false);
-            
-            const [pan, setPan] = useState({ x: 0, y: 0 });
-            const [zoom, setZoom] = useState(1);
-            const [isPanning, setIsPanning] = useState(false);
-            const [draggedNodeId, setDraggedNodeId] = useState(null);
-            const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-            const [connectingNodeId, setConnectingNodeId] = useState(null);
-            
-            const canvasRef = useRef(null);
-            const panStart = useRef({ x: 0, y: 0 });
+            <!-- Music Player Container -->
+            <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-full shadow-md">
+                <div class="text-right hidden sm:block">
+                    <div class="text-[9px] text-slate-500">فرکانس شفا و آرامش</div>
+                    <div id="music-status" class="text-[11px] text-slate-300 font-bold">آوا خاموش است</div>
+                </div>
+                <button id="music-toggle" class="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all duration-300" title="پخش/قطع فرکانس آرامش">
+                    <i id="music-icon" data-lucide="volume-x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
 
-            // Initialize App
-            useEffect(() => {
-                const savedNodes = localStorage.getItem('ins_g_nodes');
-                const savedLinks = localStorage.getItem('ins_g_links');
-                const savedKey = localStorage.getItem('ins_gemini_key');
-                
-                if (savedKey) setGeminiKey(savedKey);
-                
-                if (savedNodes && savedLinks) {
-                    setNodes(JSON.parse(savedNodes));
-                    setLinks(JSON.parse(savedLinks));
-                } else {
-                    // Load default template
-                    setNodes(WORKSPACE_PRESETS.startup.nodes);
-                    setLinks(WORKSPACE_PRESETS.startup.links);
-                }
-                
-                setChatHistory([
-                    { id: 'w1', sender: 'assistant', text: 'سلام! به استودیوی طوفان فکری **Inspirata** خوش آمدید. هر جای صفحه دو بار کلیک کنید تا ایده جدیدی ثبت شود، سپس بنویسید تا ذهن خود را گسترش دهید.' }
-                ]);
-            }, []);
+    <!-- Main Content Grid -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10 space-y-16">
+        
+        <!-- Hero Section -->
+        <section class="text-center max-w-3xl mx-auto space-y-6">
+            <span class="px-3 py-1 rounded-sm bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-bold inline-flex items-center gap-1.5 animate-bounce">
+                <i data-lucide="heart" class="w-4 h-4 fill-blue-400/20"></i>
+                <span>تقدیم با صمیمانه‌ترین آرزوها</span>
+            </span>
+            <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight tracking-tight">
+                فاطمه جان، <span class="text-transparent bg-clip-text bg-gradient-to-l from-blue-400 to-indigo-300">نور امید</span> همیشه روشن است 🤍
+            </h1>
+            <p class="text-slate-400 text-sm sm:text-base leading-relaxed text-justify sm:text-center">
+                فاطمه عزیز، می‌دانیم که این روزها چقدر دلتنگ و نگران سلامتی دایی گرامی‌ات هستی. اما یادت باشد که عشق، عمیق‌ترین و نیرومندترین انرژی جهان است. تو با صبوری و لبخند گرمت، بزرگ‌ترین تکیه‌گاه او در این روزها هستی. این وب‌سایت فضایی است آرامش‌بخش برای تقویت دلگرمی تو و فرستادن دعاهای خیر برای بهبودی کامل دایی عزیزت.
+            </p>
 
-            // Auto Save
-            useEffect(() => {
-                if (nodes.length > 0) {
-                    localStorage.setItem('ins_g_nodes', JSON.stringify(nodes));
-                    localStorage.setItem('ins_g_links', JSON.stringify(links));
-                }
-            }, [nodes, links]);
-
-            const selectedNode = useMemo(() => nodes.find(n => n.isSelected), [nodes]);
-
-            // Handlers
-            const handleCanvasDoubleClick = (e) => {
-                if (e.target !== canvasRef.current && e.target.tagName !== 'svg') return;
-                const rect = canvasRef.current.getBoundingClientRect();
-                const clientX = e.clientX - rect.left - pan.x;
-                const clientY = e.clientY - rect.top - pan.y;
-                const x = Math.round(clientX / zoom);
-                const y = Math.round(clientY / zoom);
-
-                const newId = `node_${Date.now()}`;
-                const colors = ['rose', 'indigo', 'amber', 'emerald', 'cyan'];
-                const randomColor = colors[Math.floor(Math.random() * colors.length)];
-                
-                const newNode = {
-                    id: newId,
-                    label: 'ایده جدید',
-                    x, y,
-                    color: randomColor,
-                    icon: 'lightbulb',
-                    isSelected: true
-                };
-
-                setNodes(prev => {
-                    const deselected = prev.map(n => ({ ...n, isSelected: false }));
-                    return [...deselected, newNode];
-                });
-
-                if (selectedNode) {
-                    setLinks(prev => [...prev, { id: `link_${Date.now()}`, source: selectedNode.id, target: newId }]);
-                }
-            };
-
-            const selectNode = (id, e) => {
-                e.stopPropagation();
-                if (connectingNodeId) {
-                    if (connectingNodeId !== id) {
-                        setLinks(prev => [...prev, { id: `link_${Date.now()}`, source: connectingNodeId, target: id }]);
-                    }
-                    setConnectingNodeId(null);
-                    return;
-                }
-                setNodes(prev => prev.map(n => ({ ...n, isSelected: n.id === id })));
-            };
-
-            const handleNodeMouseDown = (id, e) => {
-                e.stopPropagation();
-                selectNode(id, e);
-                const node = nodes.find(n => n.id === id);
-                if (!node) return;
-                
-                const rect = canvasRef.current.getBoundingClientRect();
-                const clientX = e.clientX - rect.left - pan.x;
-                const clientY = e.clientY - rect.top - pan.y;
-                
-                setDraggedNodeId(id);
-                setDragOffset({
-                    x: (clientX / zoom) - node.x,
-                    y: (clientY / zoom) - node.y
-                });
-            };
-
-            const handleCanvasMouseMove = (e) => {
-                if (isPanning) {
-                    setPan({
-                        x: e.clientX - panStart.current.x,
-                        y: e.clientY - panStart.current.y
-                    });
-                } else if (draggedNodeId) {
-                    const rect = canvasRef.current.getBoundingClientRect();
-                    const clientX = e.clientX - rect.left - pan.x;
-                    const clientY = e.clientY - rect.top - pan.y;
+            <!-- Poetic letter card -->
+            <div class="p-6 sm:p-8 rounded-sm bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-850 shadow-xl relative overflow-hidden text-right">
+                <div class="absolute top-0 left-0 w-24 h-24 bg-blue-600/5 rounded-full blur-2xl"></div>
+                <div class="flex items-center gap-2.5 text-blue-400 mb-4">
+                    <i data-lucide="book-open" class="w-5 h-5"></i>
+                    <h3 class="text-base sm:text-lg font-bold text-white">نامه‌ای برای فاطمه صبور</h3>
+                </div>
+                <p id="letter-content" class="text-slate-300 text-xs sm:text-sm leading-relaxed text-justify whitespace-pre-line">
+                    «فاطمه عزیز و مهربان،
+                    مبتلا شدن دایی گرامی‌ات به بیماری سرطان و بی‌میلی ایشان به بستری شدن در بیمارستان، قطعاً بار عاطفی بزرگی بر دوش تو گذاشته است. اما به یاد داشته باش که شفا لزوماً میان دیوارهای سفید و سرد بیمارستان اتفاق نمی‌افتد؛ عشق جاری در خانه، امنیت آغوش خانواده و امید بزرگی که در چشم‌های توست، گاه قوی‌ترین مرهم دنیاست. 
                     
-                    setNodes(prev => prev.map(node => {
-                        if (node.id === draggedNodeId) {
-                            return {
-                                ...node,
-                                x: Math.round(clientX / zoom - dragOffset.x),
-                                y: Math.round(clientY / zoom - dragOffset.y)
-                            };
-                        }
-                        return node;
-                    }));
-                }
-            };
+                    تصمیم ایشان را نه از روی لجبازی، بلکه از روی تمایل به حضور در کانون پرمهر خانواده و حفظ آرامش روحشان درک کن. قوی بمان، چرا که دایی‌ات اکنون به امید درون نگاهِ تو پناه برده است. ما همه در کنارت هستیم و با تمام وجود آرزو می‌کنیم سلامتی و عافیت کامل خیلی زود به جان ایشان بازگردد.»
+                </p>
+                <div class="mt-6 flex items-center justify-between border-t border-slate-850 pt-4 text-xs text-slate-500">
+                    <span>از طرفِ دوستانِ همراه تو</span>
+                    <i data-lucide="feather" class="w-4 h-4 text-indigo-400"></i>
+                </div>
+            </div>
+        </section>
 
-            const handleCanvasMouseDown = (e) => {
-                if (draggedNodeId) return;
-                setIsPanning(true);
-                panStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
-            };
-
-            const saveKey = (key) => {
-                setGeminiKey(key);
-                localStorage.setItem('ins_gemini_key', key);
-                setShowKeyModal(false);
-            };
-
-            // Call official Google Gemini API (Directly from client)
-            const sendChatMessage = async () => {
-                if (!chatInput.trim() || isAiLoading) return;
+        <!-- Interactive Candle Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center max-w-5xl mx-auto">
+            
+            <!-- Candle Illustration Box (Col-5) -->
+            <div class="md:col-span-5 p-6 rounded-sm bg-slate-900/60 border border-slate-800/80 shadow-2xl flex flex-col items-center min-h-[400px] justify-between relative overflow-hidden group">
+                <div id="candle-aura" class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl transition-all duration-1000 scale-110"></div>
                 
-                const prompt = chatInput;
-                const userMsg = { id: `u_${Date.now()}`, sender: 'user', text: prompt };
-                setChatHistory(prev => [...prev, userMsg]);
-                setChatInput('');
-                setIsAiLoading(true);
+                <!-- Falling/rising wishes particles box -->
+                <div id="particles-stage" class="absolute inset-0 pointer-events-none z-0"></div>
 
-                if (!geminiKey) {
-                    setChatHistory(prev => [...prev, {
-                        id: `sys_${Date.now()}`,
-                        sender: 'system',
-                        text: '⚠️ **خطای هوش مصنوعی**: لطفاً ابتدا کلید API خود را با کلیک بر روی دکمه چرخ‌دنده در بالای صفحه وارد کنید.'
-                    }]);
-                    setIsAiLoading(false);
-                    return;
-                }
+                <div class="text-center z-10">
+                    <span class="px-2 py-0.5 rounded-sm bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold inline-flex items-center gap-1">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span>آیین دعا و عافیت</span>
+                    </span>
+                    <h3 class="text-base font-bold text-white mt-2">یک شمع سلامتی برای دایی روشن کن</h3>
+                    <p class="text-slate-400 text-[10px] mt-1 max-w-xs leading-relaxed">
+                        با هر ضربه بر روی شمع، یک دعای خیر و انرژی شفا به سوی دایی فاطمه عزیز فرستاده می‌شود.
+                    </p>
+                </div>
 
-                try {
-                    // Structure the prompt with canvas context
-                    const contextText = nodes.map(n => `ایده: "${n.label}" ${n.isSelected ? '[فعال]' : ''}`).join('، ');
-                    const finalPrompt = `بوم من شامل ایده های زیر است: ${contextText}.\nکاربر پرسید: ${prompt}.\nبه عنوان دستیار طوفان فکری خلاق به فارسی پاسخ بده. پاسخ باید حداکثر در قالب ساختار JSON با فرمت زیر باشد:\n{\n  "reply": "پاسخ متنی الهام بخش و طراح محور شما به فارسی همراه با ایده های تکمیلی",\n  "suggestedNodes": ["ایده ۱", "ایده ۲", "ایده ۳"]\n}`;
-
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: finalPrompt }] }],
-                            generationConfig: { responseMimeType: "application/json" }
-                        })
-                    });
-
-                    if (!res.ok) throw new Error('API Key نادرست است یا خطای شبکه رخ داده است.');
-
-                    const data = await res.json();
-                    const jsonResponse = JSON.parse(data.candidates[0].content.parts[0].text);
-
-                    setChatHistory(prev => [...prev, {
-                        id: `bot_${Date.now()}`,
-                        sender: 'assistant',
-                        text: jsonResponse.reply,
-                        suggestedNodes: jsonResponse.suggestedNodes
-                    }]);
-                } catch (error) {
-                    setChatHistory(prev => [...prev, {
-                        id: `err_${Date.now()}`,
-                        sender: 'system',
-                        text: `❌ خطا در ارتباط با سرور هوش مصنوعی: ${error.message}`
-                    }]);
-                } finally {
-                    setIsAiLoading(false);
-                }
-            };
-
-            const addSuggestedNode = (label) => {
-                if (!selectedNode) return;
-                const angle = Math.random() * 2 * Math.PI;
-                const r = 160;
-                const x = Math.round(selectedNode.x + Math.cos(angle) * r);
-                const y = Math.round(selectedNode.y + Math.sin(angle) * r);
-                const newId = `node_${Date.now()}`;
-                
-                setNodes(prev => [...prev, {
-                    id: newId,
-                    label,
-                    x, y,
-                    color: selectedNode.color,
-                    icon: 'lightbulb',
-                    isSelected: false
-                }]);
-                setLinks(prev => [...prev, { id: `link_${Date.now()}`, source: selectedNode.id, target: newId }]);
-            };
-
-            return (
-                <div className="flex flex-col h-screen select-none">
-                    {/* Header */}
-                    <header class="flex items-center justify-between px-6 py-4 bg-slate-900 border-b border-slate-800 shrink-0 z-10">
-                        <div class="flex items-center space-x-3 space-x-reverse">
-                            <div class="p-2.5 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                                <i data-lucide="sparkles" class="w-6 h-6 text-amber-400"></i>
-                            </div>
-                            <div>
-                                <h1 class="text-xl font-bold bg-gradient-to-l from-slate-100 to-amber-400 bg-clip-text text-transparent">Inspirata</h1>
-                                <p class="text-[10px] text-slate-400">استودیوی خلاقیت و بوم ایده‌پردازی هوشمند</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            <button onClick={() => setShowKeyModal(true)} class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-300">
-                                <i data-lucide="settings" class="w-4 h-4"></i>
-                            </button>
-                            <button onClick={() => {
-                                setNodes(WORKSPACE_PRESETS.startup.nodes);
-                                setLinks(WORKSPACE_PRESETS.startup.links);
-                            }} class="px-3 py-1.5 bg-slate-800 text-slate-300 hover:text-white rounded-lg text-xs border border-slate-700">
-                                بارگذاری قالب اول
-                            </button>
-                        </div>
-                    </header>
-
-                    {/* Desktop Workspace Grid */}
-                    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-                        {/* Canvas */}
-                        <main 
-                            ref={canvasRef}
-                            onMouseDown={handleCanvasMouseDown}
-                            onMouseMove={handleCanvasMouseMove}
-                            onMouseUp={() => { setIsPanning(false); setDraggedNodeId(null); }}
-                            onDoubleClick={handleCanvasDoubleClick}
-                            className="flex-1 relative overflow-hidden bg-slate-950 bg-grid cursor-grab active:cursor-grabbing"
-                        >
-                            {/* Canvas Directives */}
-                            <div className="absolute top-4 right-4 z-10 bg-slate-900/95 border border-slate-800 rounded-xl p-3 shadow-xl max-w-xs text-xs text-slate-400 space-y-1">
-                                <div className="text-slate-200 font-bold flex items-center space-x-1 space-x-reverse">
-                                    <i data-lucide="compass" class="w-4 h-4 text-amber-400"></i>
-                                    <span>دستورالعمل‌ها</span>
-                                </div>
-                                <p>💡 **دوبار کلیک** برای ثبت حباب ایده‌ جدید.</p>
-                                <p>👇 **کشیدن ایده** برای سازماندهی بوم.</p>
-                                <p>🔗 کلیک روی هر حباب برای انتخاب آن.</p>
-                            </div>
-
-                            {/* SVG Connecting lines */}
-                            <svg className="absolute inset-0 pointer-events-none w-full h-full" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}>
-                                {links.map(link => {
-                                    const from = nodes.find(n => n.id === link.source);
-                                    const to = nodes.find(n => n.id === link.target);
-                                    if (!from || !to) return null;
-                                    return (
-                                        <g key={link.id}>
-                                            <path 
-                                                d={`M ${from.x} ${from.y} C ${(from.x + to.x)/2} ${from.y}, ${(from.x + to.x)/2} ${to.y}, ${to.x} ${to.y}`} 
-                                                fill="none" 
-                                                stroke={from.isSelected || to.isSelected ? COLOR_MAP[from.color]?.fill : '#334155'} 
-                                                strokeWidth={from.isSelected || to.isSelected ? "3" : "1.5"}
-                                            />
-                                        </g>
-                                    );
-                                })}
-                            </svg>
-
-                            {/* HTML Nodes container */}
-                            <div className="absolute inset-0 pointer-events-none" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}>
-                                {nodes.map(node => {
-                                    const config = COLOR_MAP[node.color] || COLOR_MAP.indigo;
-                                    return (
-                                        <div
-                                            key={node.id}
-                                            onMouseDown={(e) => handleNodeMouseDown(node.id, e)}
-                                            style={{ left: `${node.x}px`, top: `${node.y}px`, transform: 'translate(-50%, -50%)' }}
-                                            className={`absolute pointer-events-auto flex items-center space-x-2 space-x-reverse px-4 py-2.5 rounded-2xl border-2 backdrop-blur-md cursor-grab transition-all duration-150
-                                                ${config.bg} ${config.border}
-                                                ${node.isSelected ? `${config.glow} scale-105 border-white z-30` : 'hover:scale-102 z-20'}
-                                            `}
-                                        >
-                                            <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-                                            {editingNodeId === node.id ? (
-                                                <input
-                                                    type="text"
-                                                    value={editingLabel}
-                                                    onChange={e => setEditingLabel(e.target.value)}
-                                                    onBlur={() => {
-                                                        setNodes(prev => prev.map(n => n.id === node.id ? { ...n, label: editingLabel } : n));
-                                                        setEditingNodeId(null);
-                                                    }}
-                                                    onKeyDown={e => e.key === 'Enter' && e.target.blur()}
-                                                    className="bg-slate-900 border border-slate-700 text-xs px-1 rounded text-white"
-                                                    autoFocus
-                                                />
-                                            ) : (
-                                                <span onDoubleClick={() => { setEditingNodeId(node.id); setEditingLabel(node.label); }} className="text-xs font-semibold">{node.label}</span>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Node action inspector footer inside canvas */}
-                            {selectedNode && (
-                                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-3 space-x-reverse bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl shadow-2xl">
-                                    <span class="text-xs text-amber-400 font-bold">{selectedNode.label}</span>
-                                    <button onClick={() => {
-                                        setEditingNodeId(selectedNode.id);
-                                        setEditingLabel(selectedNode.label);
-                                    }} class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded">تغییر نام</button>
-                                    <button onClick={() => {
-                                        setNodes(prev => prev.filter(n => n.id !== selectedNode.id));
-                                        setLinks(prev => prev.filter(l => l.source !== selectedNode.id && l.target !== selectedNode.id));
-                                    }} class="text-[10px] bg-rose-950 text-rose-400 px-2 py-1 rounded border border-rose-800">حذف ایده</button>
-                                </div>
-                            )}
-                        </main>
-
-                        {/* Sidebar Chat & Control Room */}
-                        <aside class="w-full lg:w-96 bg-slate-900 border-t lg:border-t-0 lg:border-r border-slate-800 flex flex-col shrink-0">
-                            <div class="p-4 border-b border-slate-800">
-                                <h3 class="text-sm font-bold text-slate-300 flex items-center space-x-2 space-x-reverse">
-                                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
-                                    <span>همیار هوش مصنوعی استودیو</span>
-                                </h3>
-                            </div>
-
-                            {/* Chat history list */}
-                            <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
-                                {chatHistory.map(msg => (
-                                    <div key={msg.id} class={`flex flex-col ${msg.sender === 'user' ? 'items-start' : 'items-end'}`}>
-                                        <div class={`p-3 rounded-xl max-w-[85%] ${msg.sender === 'user' ? 'bg-indigo-600 text-white' : 'bg-slate-950 text-slate-200'}`}>
-                                            <p>{msg.text}</p>
-                                        </div>
-                                        {msg.suggestedNodes && msg.suggestedNodes.length > 0 && (
-                                            <div class="flex flex-wrap gap-1.5 mt-2 justify-end">
-                                                {msg.suggestedNodes.map((s, idx) => (
-                                                    <button key={idx} onClick={() => addSuggestedNode(s)} class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px]">
-                                                        + افزودن "{s}" به بوم
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                                {isAiLoading && <div class="text-slate-500 animate-pulse">در حال ایده‌پردازی با هوش مصنوعی...</div>}
-                            </div>
-
-                            {/* Bottom input area */}
-                            <div class="p-4 bg-slate-950 border-t border-slate-800 flex space-x-2 space-x-reverse">
-                                <input 
-                                    type="text" 
-                                    value={chatInput}
-                                    onChange={e => setChatInput(e.target.value)}
-                                    onKeyDown={e => e.key === 'Enter' && sendChatMessage()}
-                                    placeholder="برای توسعه حباب‌های خود سوالی بپرسید..." 
-                                    class="flex-1 bg-slate-900 border border-slate-800 text-xs px-3 py-2 rounded-lg text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                                />
-                                <button onClick={sendChatMessage} class="p-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg">
-                                    <i data-lucide="send" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        </aside>
+                <!-- Candle container -->
+                <div id="candle-trigger" class="relative my-8 flex flex-col items-center cursor-pointer select-none z-10">
+                    <!-- Flame -->
+                    <div id="candle-flame" class="absolute -top-16 flex flex-col items-center flame-active">
+                        <div class="absolute w-12 h-12 bg-amber-400/20 rounded-full blur-md"></div>
+                        <div class="w-6 h-12 bg-gradient-to-t from-red-500 via-amber-400 to-yellow-100 rounded-full blur-[0.5px] shadow-lg origin-bottom scale-y-110"></div>
+                        <div class="absolute bottom-0 w-3.5 h-5 bg-indigo-500 rounded-full blur-[0.5px] opacity-70"></div>
                     </div>
 
-                    {/* Gemini Key Config Modal */}
-                    {showKeyModal && (
-                        <div class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-                            <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 text-right">
-                                <h3 class="font-bold text-slate-100 mb-2 text-sm">تنظیمات هوش مصنوعی Gemini</h3>
-                                <p class="text-[11px] text-slate-400 mb-4 leading-relaxed">برای استفاده از چت هوش مصنوعی، لطفاً کلید API دریافتی خود از گوگل را وارد نمایید. این کلید مستقیماً در مرورگر شما ذخیره شده و هیچ کجای دیگری ارسال نخواهد شد.</p>
-                                <input 
-                                    id="key_input_field"
-                                    type="password" 
-                                    placeholder="AIzaSy..." 
-                                    defaultValue={geminiKey}
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 font-mono mb-4 focus:outline-none"
-                                />
-                                <div class="flex justify-start space-x-2 space-x-reverse text-xs">
-                                    <button onClick={() => saveKey(document.getElementById('key_input_field').value)} class="px-4 py-2 bg-amber-500 text-slate-950 rounded-lg font-bold">ذخیره</button>
-                                    <button onClick={() => setShowKeyModal(false)} class="px-3 py-2 bg-slate-800 text-slate-300 rounded-lg">انصراف</button>
-                                </div>
-                            </div>
+                    <!-- Wick -->
+                    <div class="w-1 h-3 bg-slate-700 rounded-full"></div>
+
+                    <!-- Candle Body -->
+                    <div class="relative w-14 h-32 bg-gradient-to-r from-amber-100 via-amber-50 to-amber-200/90 rounded-t-md rounded-b-sm border-l border-r border-amber-300/30 flex flex-col justify-end p-2 overflow-hidden shadow-inner">
+                        <div class="absolute top-0 left-2 w-3 h-8 bg-amber-50 rounded-b-full"></div>
+                        <div class="absolute top-0 right-3 w-2 h-12 bg-amber-50/80 rounded-b-full shadow-sm"></div>
+                        <div class="absolute top-0 right-1 w-2.5 h-5 bg-amber-50 rounded-b-full"></div>
+                        <div class="w-full flex justify-center mb-10 opacity-70">
+                            <i data-lucide="heart" class="w-5 h-5 text-red-500 fill-red-500 animate-pulse"></i>
                         </div>
-                    )}
+                        <div class="text-[10px] text-slate-800 text-center font-bold tracking-widest leading-none">امید</div>
+                    </div>
+                    
+                    <!-- Base -->
+                    <div class="w-24 h-3 bg-gradient-to-b from-slate-800 to-slate-950 rounded-full border-t border-slate-700/50 shadow-md"></div>
                 </div>
-            );
+
+                <!-- Stats -->
+                <div class="w-full text-center z-10">
+                    <div class="text-xs sm:text-sm font-bold text-slate-200 flex items-center justify-center gap-1">
+                        <span id="wish-count-val" class="text-amber-400 font-mono text-base font-black">137</span>
+                        <span>شمع سلامتی روشن شده است</span>
+                    </div>
+                    <div id="candle-msg" class="text-[11px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-sm mt-3 inline-flex items-center gap-1 opacity-0 transition-opacity duration-300">
+                        <i data-lucide="flame" class="w-3.5 h-3.5 animate-pulse"></i>
+                        <span>دعای شما به کائنات فرستاده شد... 🤍</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supporting quotes (Col-7) -->
+            <div class="md:col-span-7 space-y-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="sun" class="text-amber-400 w-5 h-5"></i>
+                    <span>زمزمه‌های امیدبخش</span>
+                </h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="p-5 rounded-sm bg-slate-900/40 border border-slate-850 hover:border-slate-800 transition-all duration-300 hover:-translate-y-0.5">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-amber-400 mb-2"></i>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed text-justify">
+                            «امید، تنها چیزی است که از ترس قوی‌تر است. یک پنجره کوچک کافی است تا نور تمام اتاق را روشن کند.»
+                        </p>
+                        <span class="text-[9px] text-slate-500 block mt-3">— مهاتما گاندی</span>
+                    </div>
+
+                    <div class="p-5 rounded-sm bg-slate-900/40 border border-slate-850 hover:border-slate-800 transition-all duration-300 hover:-translate-y-0.5">
+                        <i data-lucide="heart" class="w-5 h-5 text-red-400 mb-2"></i>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed text-justify">
+                            «در دل هر زمستان، بهاری بی‌صدا نفس می‌کشد و پشت هر شب تاریک، سپیده‌ای در انتظار طلوع است.»
+                        </p>
+                        <span class="text-[9px] text-slate-500 block mt-3">— جبران خلیل جبران</span>
+                    </div>
+
+                    <div class="p-5 rounded-sm bg-slate-900/40 border border-slate-850 hover:border-slate-800 transition-all duration-300 hover:-translate-y-0.5">
+                        <i data-lucide="flower" class="w-5 h-5 text-emerald-400 mb-2"></i>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed text-justify">
+                            «عشق بزرگ‌ترین شفا دهنده است. عشقی که تو به دایی داری، قوی‌ترین انرژی غیرقابل دیدن برای بهبودی اوست.»
+                        </p>
+                        <span class="text-[9px] text-slate-500 block mt-3">— روانشناسی مثبت</span>
+                    </div>
+
+                    <div class="p-5 rounded-sm bg-slate-900/40 border border-slate-850 hover:border-slate-800 transition-all duration-300 hover:-translate-y-0.5">
+                        <i data-lucide="compass" class="w-5 h-5 text-blue-400 mb-2"></i>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed text-justify">
+                            «گاهی بهبودی واقعی از مسیر آرامش و پذیرش می‌گذرد. دستان پرمهر تو امن‌ترین بیمارستان دنیا برای اوست.»
+                        </p>
+                        <span class="text-[9px] text-slate-500 block mt-3">— حکمت همدلی</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wish Garden Section -->
+        <section class="space-y-6">
+            <div class="text-center">
+                <span class="px-2.5 py-1 rounded-sm bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-bold inline-flex items-center gap-1.5">
+                    <i data-lucide="flower" class="w-4 h-4"></i>
+                    <span>باغچه همدلی فاطمه</span>
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-bold text-white mt-3">کاشت بذر آرزو و تندرستی</h2>
+                <p class="text-slate-400 text-xs sm:text-sm mt-1 max-w-lg mx-auto">
+                    یک جمله یا دعای خیر بنویس و آن را در باغچه امید بکار تا مانند فانوسی روشن بماند.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Form Box (Col-5) -->
+                <div class="lg:col-span-5 bg-slate-900/40 border border-slate-800/80 p-6 sm:p-8 rounded-sm shadow-xl">
+                    <form id="wish-form" class="space-y-4">
+                        <div>
+                          <label class="block text-xs font-bold text-slate-300 mb-1.5">نام یا نام مستعار شما (اختیاری):</label>
+                          <input
+                            type="text"
+                            id="wish-sender"
+                            placeholder="مثال: فاطمه، یک دوست صمیمی..."
+                            class="w-full px-4 py-3 bg-slate-950 border border-slate-850 rounded-sm text-slate-200 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-right"
+                          />
+                        </div>
+
+                        <div>
+                          <label class="block text-xs font-bold text-slate-300 mb-1.5">متن آرزو یا دعای خیر: *</label>
+                          <textarea
+                            required
+                            id="wish-content"
+                            rows="4"
+                            placeholder="دایی عزیزم، انشالله همیشه تنتون سالم باشه..."
+                            class="w-full px-4 py-3 bg-slate-950 border border-slate-850 rounded-sm text-slate-200 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-right resize-none"
+                          ></textarea>
+                        </div>
+
+                        <div>
+                          <label class="block text-xs font-bold text-slate-300 mb-2">نوع بذر را انتخاب کنید:</label>
+                          <div class="grid grid-cols-3 gap-2">
+                            <button
+                              type="button"
+                              data-type="lantern"
+                              class="seed-btn px-3 py-2.5 rounded-sm border text-xs font-bold flex flex-col items-center gap-1.5 cursor-pointer bg-blue-500/10 border-blue-500 text-blue-400"
+                            >
+                              <i data-lucide="sparkles" class="w-4 h-4"></i>
+                              <span>فانوس هوا</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              data-type="flower"
+                              class="seed-btn px-3 py-2.5 rounded-sm border text-xs font-bold flex flex-col items-center gap-1.5 cursor-pointer bg-slate-950/60 border-slate-850 text-slate-400"
+                            >
+                              <i data-lucide="flower" class="w-4 h-4"></i>
+                              <span>گل بهشتی</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              data-type="star"
+                              class="seed-btn px-3 py-2.5 rounded-sm border text-xs font-bold flex flex-col items-center gap-1.5 cursor-pointer bg-slate-950/60 border-slate-850 text-slate-400"
+                            >
+                              <i data-lucide="star" class="w-4 h-4"></i>
+                              <span>ستاره آرزو</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-sm transition-all duration-300 shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <i data-lucide="plus" class="w-4.5 h-4.5"></i>
+                          <span>کاشت بذر در باغچه امید</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Wishes View Stream (Col-7) -->
+                <div class="lg:col-span-7 space-y-4 max-h-[500px] overflow-y-auto pr-2" id="wishes-stream">
+                    <!-- Dynamic wishes will be inserted here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Wisdom & Hospitalization Guide Section -->
+        <section class="bg-slate-900/40 border border-slate-800/80 rounded-sm p-6 sm:p-8 relative overflow-hidden">
+            <div class="absolute -top-12 -left-12 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl"></div>
+            
+            <div class="relative z-10">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                  <div class="text-right">
+                    <span class="px-2.5 py-1 rounded-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold inline-flex items-center gap-1.5 mb-2">
+                      <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                      <span>راهنمای همدلی و آرامش</span>
+                    </span>
+                    <h3 class="text-xl sm:text-2xl font-bold text-white">چگونه با عدم علاقه دایی به بستری شدن برخورد کنیم؟</h3>
+                    <p class="text-slate-400 text-xs sm:text-sm mt-1 max-w-xl">
+                      بسیاری از بیماران برای حفظ استقلال و آرامش خود ترجیح می‌دهند در خانه بمانند. در ادامه چند راهکار برای مدیریت این موضوع عاطفی آورده‌ایم.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-5 rounded-sm bg-slate-950/60 border border-slate-850 flex gap-4 text-right">
+                        <div class="w-10 h-10 rounded-sm bg-blue-600/10 border border-blue-500/20 text-blue-400 font-mono font-black flex items-center justify-center shrink-0">۱</div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200 mb-1.5">درک ترس‌های او و عدم فشار مستقیم</h4>
+                            <p class="text-xs sm:text-sm text-slate-400 leading-relaxed text-justify">
+                                بستری شدن در بیمارستان ممکن است برای دایی عزیز احساس از دست دادن استقلال و کنترل بر زندگی را تداعی کند. به جای اصرار و اجبار مستقیم، بگویید: «من درکت می‌کنم دایی عزیزم، ولی سلامتی شما به من انگیزه میده.»
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-sm bg-slate-950/60 border border-slate-850 flex gap-4 text-right">
+                        <div class="w-10 h-10 rounded-sm bg-blue-600/10 border border-blue-500/20 text-blue-400 font-mono font-black flex items-center justify-center shrink-0">۲</div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200 mb-1.5">بررسی گزینه مراقبت و درمان در منزل (Home Care)</h4>
+                            <p class="text-xs sm:text-sm text-slate-400 leading-relaxed text-justify">
+                                اگر وضعیت پزشکی اجازه می‌دهد، با پزشک متخصص درباره امکان تجهیز خانه و آوردن خدمات درمانی در منزل گفتگو کنید. مراقبت‌های حمایتی در خانه اغلب با روحیه بیمار سازگارتر است.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-sm bg-slate-950/60 border border-slate-850 flex gap-4 text-right">
+                        <div class="w-10 h-10 rounded-sm bg-blue-600/10 border border-blue-500/20 text-blue-400 font-mono font-black flex items-center justify-center shrink-0">۳</div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200 mb-1.5">تغییر محیط بیمارستان به فضای صمیمی</h4>
+                            <p class="text-xs sm:text-sm text-slate-400 leading-relaxed text-justify">
+                                در صورت بستری موقت، سعی کنید با آوردن وسایل شخصی ایشان، موسیقی آرام و تصاویر خانوادگی، اتاق سرد بیمارستان را به محیطی گرم و مانوس تبدیل کنید.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-sm bg-slate-950/60 border border-slate-850 flex gap-4 text-right">
+                        <div class="w-10 h-10 rounded-sm bg-blue-600/10 border border-blue-500/20 text-blue-400 font-mono font-black flex items-center justify-center shrink-0">۴</div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200 mb-1.5">تمرکز بر کیفیت و صمیمیت لحظات حضور</h4>
+                            <p class="text-xs sm:text-sm text-slate-400 leading-relaxed text-justify">
+                                دستش را بگیرید، خاطرات خوب گذشته را مرور کنید و به او امنیت و عشق هدیه دهید. صمیمیت شما عمیق‌ترین تسکین درمانی است.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-slate-500 border-t border-slate-900 mt-20 pt-8 max-w-7xl mx-auto">
+        <p>با آرزوی تندرستی و عافیت کامل برای دایی گرامی فاطمه عزیز 🤍</p>
+        <p class="mt-2 text-[10px]">طراحی شده با عشق برای بخشیدن بارقه‌ای از امید و آرامش</p>
+    </footer>
+
+    <!-- Interactive JS Scripts -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Starry Background Generator
+        const starsContainer = document.getElementById('stars-container');
+        const starCount = 60;
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            star.style.width = Math.random() * 3 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 4 + 's';
+            starsContainer.appendChild(star);
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        // Web Audio Synthesizer (Healing Frequency)
+        let audioCtx = null;
+        let osc1 = null;
+        let osc2 = null;
+        let masterGain = null;
+        let lfo = null;
+        let isMusicPlaying = false;
 
-        // Init Lucide icons
-        setTimeout(() => {
+        const musicToggle = document.getElementById('music-toggle');
+        const musicIcon = document.getElementById('music-icon');
+        const musicStatus = document.getElementById('music-status');
+
+        function startAmbientSound() {
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContextClass();
+                
+                masterGain = audioCtx.createGain();
+                masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+                masterGain.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 2.0);
+                masterGain.connect(audioCtx.destination);
+
+                osc1 = audioCtx.createOscillator();
+                osc1.type = 'triangle';
+                osc1.frequency.setValueAtTime(164.81, audioCtx.currentTime); // E3
+
+                osc2 = audioCtx.createOscillator();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(246.94, audioCtx.currentTime); // B3
+
+                lfo = audioCtx.createOscillator();
+                lfo.type = 'sine';
+                lfo.frequency.setValueAtTime(0.15, audioCtx.currentTime);
+                
+                const lfoGain = audioCtx.createGain();
+                lfoGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(masterGain.gain);
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(400, audioCtx.currentTime);
+
+                osc1.connect(filter);
+                osc2.connect(filter);
+                filter.connect(masterGain);
+
+                osc1.start(0);
+                osc2.start(0);
+                lfo.start(0);
+
+                isMusicPlaying = true;
+                musicStatus.textContent = "در حال پخش فرکانس آرامش";
+                musicIcon.setAttribute('data-lucide', 'volume-2');
+                lucide.createIcons();
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+
+        function stopAmbientSound() {
+            if (masterGain && audioCtx) {
+                masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+                masterGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
+                setTimeout(() => {
+                    try {
+                        osc1.stop();
+                        osc2.stop();
+                        lfo.stop();
+                        audioCtx.close();
+                    } catch(err) {}
+                    audioCtx = null;
+                    isMusicPlaying = false;
+                    musicStatus.textContent = "آوا خاموش است";
+                    musicIcon.setAttribute('data-lucide', 'volume-x');
+                    lucide.createIcons();
+                }, 1000);
+            }
+        }
+
+        musicToggle.addEventListener('click', () => {
+            if (isMusicPlaying) {
+                stopAmbientSound();
+            } else {
+                startAmbientSound();
+            }
+        });
+
+        // Interactive Candle Prayers
+        let wishCount = parseInt(localStorage.getItem('html_wish_count') || '137', 10);
+        const wishCountVal = document.getElementById('wish-count-val');
+        const candleTrigger = document.getElementById('candle-trigger');
+        const candleMsg = document.getElementById('candle-msg');
+        const particlesStage = document.getElementById('particles-stage');
+
+        wishCountVal.textContent = wishCount;
+
+        candleTrigger.addEventListener('click', () => {
+            wishCount++;
+            localStorage.setItem('html_wish_count', wishCount);
+            wishCountVal.textContent = wishCount;
+
+            // Trigger message
+            candleMsg.classList.remove('opacity-0');
+            candleMsg.classList.add('opacity-100');
+            setTimeout(() => {
+                candleMsg.classList.remove('opacity-100');
+                candleMsg.classList.add('opacity-0');
+            }, 3000);
+
+            // Spawn particles
+            for (let i = 0; i < 12; i++) {
+                const p = document.createElement('div');
+                p.style.position = 'absolute';
+                p.style.borderRadius = '50%';
+                p.style.background = 'linear-gradient(to top, #f59e0b, #fef08a)';
+                p.style.width = (Math.random() * 5 + 4) + 'px';
+                p.style.height = p.style.width;
+                p.style.left = (35 + Math.random() * 30) + '%';
+                p.style.top = '75%';
+                p.style.opacity = '0.9';
+                p.style.transition = 'all 2.5s ease-out';
+                particlesStage.appendChild(p);
+
+                // Animate rising up
+                setTimeout(() => {
+                    p.style.transform = 'translateY(-220px) scale(0.2)';
+                    p.style.opacity = '0';
+                    p.style.left = (parseFloat(p.style.left) + (Math.random() * 10 - 5)) + '%';
+                }, 50);
+
+                // Clean up particle
+                setTimeout(() => {
+                    p.remove();
+                }, 2500);
+            }
+        });
+
+        // Wish Garden Logic
+        const INITIAL_WISHES = [
+            { id: '1', sender: 'متین', content: 'فاطمه جان، ایمان دارم که دایی عزیزت با عشق و مراقبت تو این روزهای سخت رو پشت سر می‌گذاره. آرزوی سلامتی کامل دارم براشون. قوی باش دوست من.', date: 'امروز', type: 'lantern', color: 'from-amber-400 to-orange-500' },
+            { id: '2', sender: 'یک دوست همدل', content: 'برای دایی مهربانت انرژی‌های شفا و نور می‌فرستم. امیدوارم هر لحظه حالشون بهتر و بهتر بشه و سایه‌شون همیشه مستدام باشه.', date: 'امروز', type: 'star', color: 'from-blue-400 to-indigo-500' },
+            { id: '3', sender: 'پرستار سلامت', content: 'گاهی عشق خانواده و آرامش خانه از صد تا داروی بیمارستانی قوی‌تر عمل می‌کنه. نگران نباش فاطمه عزیز، تصمیم دایی رو با آغوش باز پذیرا باش.', date: 'دیروز', type: 'flower', color: 'from-emerald-400 to-teal-500' }
+        ];
+
+        let gardenWishes = JSON.parse(localStorage.getItem('html_garden_wishes') || 'null');
+        if (!gardenWishes) {
+            gardenWishes = INITIAL_WISHES;
+            localStorage.setItem('html_garden_wishes', JSON.stringify(gardenWishes));
+        }
+
+        const wishesStream = document.getElementById('wishes-stream');
+        const wishForm = document.getElementById('wish-form');
+        let selectedType = 'lantern';
+
+        // Select type logic
+        const seedBtns = document.querySelectorAll('.seed-btn');
+        seedBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                seedBtns.forEach(b => {
+                    b.className = "seed-btn px-3 py-2.5 rounded-sm border text-xs font-bold flex flex-col items-center gap-1.5 cursor-pointer bg-slate-950/60 border-slate-850 text-slate-400";
+                });
+                
+                const type = btn.getAttribute('data-type');
+                selectedType = type;
+                
+                if (type === 'lantern') btn.className = "seed-btn px-3 py-2.5 rounded-sm border text-xs font-bold flex flex-col items-center gap-1.5 cursor-pointer bg-amber-500/10 border-amber-500 text-amber-400";
+                if (type === 'flower') btn.className = "seed-btn px-3 py-2.5 rounded-sm border text-xs font-bold flex flex-col items-center gap-1.5 cursor-pointer bg-emerald-500/10 border-emerald-500 text-emerald-400";
+                if (type === 'star') btn.className = "seed-btn px-3 py-2.5 rounded-sm border text-xs font-bold flex flex-col items-center gap-1.5 cursor-pointer bg-indigo-500/10 border-indigo-500 text-indigo-400";
+            });
+        });
+
+        function renderWishes() {
+            wishesStream.innerHTML = '';
+            gardenWishes.forEach(wish => {
+                const card = document.createElement('div');
+                card.className = "p-5 rounded-sm bg-gradient-to-r from-slate-950/80 to-slate-900 border border-slate-850 hover:border-slate-800 shadow-md flex items-start gap-4 relative overflow-hidden text-right";
+                
+                let iconStr = 'sparkles';
+                let iconColor = 'text-amber-400';
+                if (wish.type === 'flower') { iconStr = 'flower'; iconColor = 'text-emerald-400'; }
+                if (wish.type === 'star') { iconStr = 'star'; iconColor = 'text-indigo-400'; }
+
+                card.innerHTML = \`
+                    <div class="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b \&{wish.color}"></div>
+                    <div class="p-2 rounded-sm shrink-0 bg-slate-900 border border-slate-800 text-slate-300">
+                        <i data-lucide="\${iconStr}" class="w-5 h-5 \${iconColor}"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <span class="text-sm font-bold text-slate-200">
+                                از طرف: <span class="text-blue-400">\${wish.sender}</span>
+                            </span>
+                            <span class="text-[10px] text-slate-500 font-mono">\${wish.date}</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed text-justify whitespace-pre-line">\${wish.content}</p>
+                    </div>
+                \`;
+                wishesStream.appendChild(card);
+            });
             lucide.createIcons();
-        }, 800);
+        }
+
+        wishForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const senderVal = document.getElementById('wish-sender').value.trim() || 'یک دوست مهربان';
+            const contentVal = document.getElementById('wish-content').value.trim();
+            if (!contentVal) return;
+
+            let colorStr = 'from-amber-400 to-orange-500';
+            if (selectedType === 'flower') colorStr = 'from-emerald-400 to-teal-500';
+            if (selectedType === 'star') colorStr = 'from-indigo-400 to-purple-500';
+
+            const newWish = {
+                id: Date.now().toString(),
+                sender: senderVal,
+                content: contentVal,
+                date: 'همین الان',
+                type: selectedType,
+                color: colorStr
+            };
+
+            gardenWishes.unshift(newWish);
+            localStorage.setItem('html_garden_wishes', JSON.stringify(gardenWishes));
+            renderWishes();
+
+            document.getElementById('wish-sender').value = '';
+            document.getElementById('wish-content').value = '';
+        });
+
+        // Render initial wishes
+        renderWishes();
     </script>
 </body>
 </html>
